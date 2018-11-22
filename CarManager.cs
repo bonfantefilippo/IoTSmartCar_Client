@@ -9,45 +9,42 @@ using System.Text;
 
 namespace Client
 {
+    /// <summary>
+    /// Fornisce metodi per esporre i dati dalla macchina
+    /// </summary>
     public class CarManager
     {
-        public void ExecuteHTTPTelemetry(List<Sensor> allSensors)
+
+        /// <summary>
+        /// Esegue una post alle API inviando i dati presenti nella <paramref name="queue"/>
+        /// </summary>
+        /// <param name="queue">Coda da dove andare a recuperare i dati</param>
+        public void ExecuteHTTPTelemetry(QueueManager queue)
         {
-            QueueManager queueManager;
             HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create("http://localhost:8080/v1/sensors/write");
             httpWebRequest.ContentType = "text/json";
             httpWebRequest.Method = "POST";
-
-
-
-            foreach (var sensor in allSensors)
+            object responseObj = new object();
+            try
             {
-                queueManager = new QueueManager("carData", sensor.exposeValue(), "dati rilevati da ICars");
-                try
-                {
-                    //var obj = queueManager.ReadMSMQQueue();
-                    //queueManager.ReadMSMQQueueList();
-                    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-                    {
-                        
-                        streamWriter.Write(sensor.exposeValue());
-                        //streamWriter.Write(JsonConvert.SerializeObject(obj));
-                    }
-                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                    Console.Out.WriteLine(httpResponse.StatusCode);
-                }
-                catch (Exception e)
-                {
 
-                    queueManager.WriteMSMQ();
-                    Console.WriteLine($"Aggiunto alla coda: {sensor.exposeValue()}");
-                }
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    var msg = queue.ReadmMSMQQueue(); //leggo dalla cosa
+                    streamWriter.Write(msg);
 
+                }
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                //responseObj = httpResponse.StatusCode.ToString();
+                Console.Out.WriteLine(httpResponse.StatusCode);
             }
-
+            catch (Exception e)
+            {
+                Console.WriteLine($"NO CONNECTION");
+            }
         }
 
-    
+
     }
 }
 

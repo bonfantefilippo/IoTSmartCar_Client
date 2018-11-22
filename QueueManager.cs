@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Client.Sensors;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Messaging;
@@ -10,19 +12,24 @@ namespace Client
     public class QueueManager
     {
         private string QueueName { get; set; }
-        private object Message { get; set; }
+        private List<Sensor> Data { get; set; }
         private object Description { get; set; }
-        private string Path { get; set; }
+        public string Path { get; set; }
 
-        public QueueManager(string queueName, object message, object description)
+
+        public QueueManager(string queueName, List<Sensor> data, object description)
         {
             QueueName = queueName;
-            Message = message;
+            Data = data;
             Description = description;
             Path = $@".\Private$\{QueueName}";
         }
+        public QueueManager()
+        {
 
-        public void WriteMSMQ()
+        }
+
+        public void WriteOnMSMQ()
         {
 
             //string description = "test queue", message = "test message", path = @".\Private$\IDG";
@@ -41,7 +48,12 @@ namespace Client
                     messageQueue = new MessageQueue(Path);
                     messageQueue.Label = Description.ToString();
                 }
-                messageQueue.Send(Message);
+
+                foreach (var ms in Data)
+                {
+                    messageQueue.Send(ms.exposeValue());
+                    Console.WriteLine($"Aggiunto alla coda: {ms.exposeValue()}");
+                }
             }
             catch
             {
@@ -54,55 +66,37 @@ namespace Client
 
         }
 
-        public object ReadMSMQQueue()
+
+        /// <summary>
+        /// Legge dalla coda MSMQ
+        /// </summary>
+        /// <returns>Oggetto contente il messaggio nella <see cref="QueueName"/></returns>
+        public object ReadmMSMQQueue()
         {
-            //string path = $@".\Private$\{QueueName}";
             Message message;
-
+            object msg = new object();
             using (MessageQueue messageQueue = new MessageQueue(Path))
             {
-                    message = messageQueue.Receive();
-                   
-                    message.Formatter = new XmlMessageFormatter(new string[] { "System.String, mscorlib" });
-                    object msg = message.Body;
-                    
-                    Console.WriteLine($"Reading: {msg}");
-                
-            }
-            return message;
-        }
 
-        public List<object> ReadMSMQQueueList()
-        {
-          
-            List<object> lstMessages = new List<object>();
-            Message[] messages;
-      
-
-            using (MessageQueue messageQueue = new MessageQueue(Path))
-            {
-                
-                messages = new[] { messageQueue.Receive() };
-                //messageQueue.ReceiveCompleted += new ReceiveCompletedEventHandler(asyncResult.AsyncResult);
-                foreach(Message msgQueue in messages)
+                try
                 {
-                    msgQueue.Formatter = new XmlMessageFormatter(new string[] { "System.String, mscorlib" });
-                    object msg = msgQueue.Body;
-                    lstMessages.Add(msg);
-                    Console.WriteLine($"Reading: {msg}");
+                    message = messageQueue.Receive();
+                    //message.Formatter = new XmlMessageFormatter(new Type[] { typeof(Sensor) });
+                    message.Formatter = new XmlMessageFormatter(new string[] { "System.String, mscorlib" });
+                    msg = message.Body;
+
+                    //Console.WriteLine($"Reading: {msg}");
                 }
-               
-
+                catch (MessageQueueException e)
+                {
+                    Console.WriteLine($"Errore: {e.Message}");
+                }
+                catch (InvalidOperationException e)
+                {
+                    Console.WriteLine($"Errore: {e.Message}");
+                }
             }
-            return lstMessages;
+            return msg;
         }
-
-        /*private async Task<Message> MyAsincReceive()
-        {
-            var queue = new MessageQueue(Path);
-            var message = await Task.Factory.FromAsync(queue.BeginPeek(), queue.EndPeek);
-
-        }*/
-       
     }
 }

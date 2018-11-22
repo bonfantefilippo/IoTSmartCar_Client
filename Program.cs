@@ -12,18 +12,22 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            TemperatureSensor tp = new TemperatureSensor();
+            TemperatureSensor temperatureSensor = new TemperatureSensor();
+            
             CarManager carManager = new CarManager();
-
             List<Sensor> sensori = new List<Sensor>
                 {
-                    tp
+                    temperatureSensor
                 };
 
-
+            QueueManager carQueue = new QueueManager("carData", sensori, "Data from SmartCar");
+            carQueue.ReadmMSMQQueue();
             while (true)
             {
-                carManager.ExecuteHTTPTelemetry(sensori);
+                temperatureSensor.getMeasure(); //imposta la misura al sensore
+
+                carQueue.WriteOnMSMQ(); //scrivo nella coda MSMQ
+                carManager.ExecuteHTTPTelemetry(carQueue);
                 System.Threading.Thread.Sleep(1000);
 
             }

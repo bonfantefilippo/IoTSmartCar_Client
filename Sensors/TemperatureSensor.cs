@@ -6,17 +6,26 @@ using System.Text;
 
 namespace Client.Sensors
 {
+    /// <summary>
+    /// Fornisce l'accesso al sensore di temperatura
+    /// </summary>
     public class TemperatureSensor: Sensor
     {
 
         public TemperatureSensor(): base("TMP-01", "Temperature", "°C")
         {
-            MessageValue = getMeasure();
             
         }
 
+        /// <summary>
+        /// Dato rilevato dal sensore di temperatura
+        /// </summary>
         public override decimal MessageValue { get; set; }
 
+        /// <summary>
+        /// Imposto i valori del sensore di temperatura
+        /// </summary>
+        /// <returns><see cref="MessageValue"/> Dato rilevato</returns>
         public override decimal getMeasure()
         {
             Random rnd = new Random();
@@ -24,6 +33,10 @@ namespace Client.Sensors
             return MessageValue;
         }
 
+        /// <summary>
+        /// Serializza e espone l'oggetto <see cref="TemperatureSensor"/>
+        /// </summary>
+        /// <returns></returns>
         public override object exposeValue()
         {
             
@@ -41,6 +54,10 @@ namespace Client.Sensors
             return JsonConvert.SerializeObject(measure);
         }
 
+        /// <summary>
+        /// Imposta un valore al sensore di temperatura
+        /// </summary>
+        /// <param name="message">valore di <see cref="TemperatureSensor"/></param>
         public override void setMeasureValue(decimal message)
         {
             MessageValue = message;
