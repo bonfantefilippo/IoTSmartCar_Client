@@ -1,0 +1,11 @@
+{
+  "name": "smartcart_project",
+  "version": "1.0.0",
+  "description": "progetto iot su smart car, client in .net",
+  "main": "Program.cs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Filippo Bonfante",
+  "license": "ISC"
+}
